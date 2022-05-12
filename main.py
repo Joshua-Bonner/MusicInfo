@@ -1,8 +1,8 @@
+import json
 import os
 from dotenv import load_dotenv
 
 import SpotifyAPI
-from common import APIQueryType
 
 load_dotenv()
 CLIENT_ID = os.getenv('CLIENT_ID')
@@ -11,7 +11,8 @@ CLIENT_SECRET = os.getenv('CLIENT_SECRET')
 
 def main():
     client = SpotifyAPI.SpotifyAPI(CLIENT_ID, CLIENT_SECRET)
-    print(client.search('Time', APIQueryType.TRACK))
+    data = client.get_track_info('in the end')
+    print(json.dumps(data, indent=2))
 
 
 if __name__ == '__main__':

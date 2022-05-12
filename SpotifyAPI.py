@@ -1,4 +1,6 @@
 import base64
+import json
+
 import requests
 from urllib.parse import urlencode
 
@@ -33,7 +35,7 @@ class SpotifyAPI(object):
 
         # if the request is invalid handle failure
         if request.status_code not in range(200, 299):
-            print(f'Request failed with error code: {request.status_code}')
+            raise Exception(f'Failed to authenticate client with error code: {request.status_code}')
             return False
 
         # store access token into object variable
@@ -52,7 +54,7 @@ class SpotifyAPI(object):
 
         # type check query type
         if not isinstance(query_type, APIQueryType):
-            print('Invalid query type!')
+            raise Exception('Invalid query type!')
             return {}
 
         # set up request
@@ -64,7 +66,53 @@ class SpotifyAPI(object):
         # initiate request and return its output in a json dictionary
         request = requests.get(search_url, headers=headers)
         if request.status_code not in range(200, 299):
-            print(f'Request failed with error code: {request.status_code}')
+            raise Exception(f'Request failed with error code: {request.status_code}')
             return {}
 
         return request.json()
+
+    def get_artist_info(self, artist_name: str):
+        pass
+
+    def get_album_info(self, album_name: str):
+        pass
+
+    def get_track_info(self, track_name: str) -> dict:
+        """Using the SpotifyAPI search function retrieve track information
+           based on the track name
+
+        :param track_name: The name of the track to query the Spotify API for
+        :return: A dictionary of dictionaries that contain information regarding each
+                 individual track with the same name:
+                     Key = unique Spotify id
+                     Values = track, artist, album
+        """
+
+        # validity check on track_name
+        if track_name is None or track_name == '':
+            raise Exception(f'Must provide valid track name')
+            return {}
+
+        # return dictionary
+        track_data = {}
+
+        # call to SpotifyAPI search
+        data = self.search(track_name, APIQueryType.TRACK)
+
+        # drill into json object returned by search and grab necessary info
+        for tracks in data['tracks']['items']:
+            name = str(tracks['name']).lower()
+            if name == track_name:
+                track_info = {
+                    'track': tracks['name'],
+                    'artist': tracks['artists'][0]['name'],
+                    'album': tracks['album']['name']
+                }
+                track_data[tracks['id']] = track_info
+
+        # in the event that no data is found return status indicating as such
+        if len(track_data) == 0:
+            print(f'Track data cannot be found on Spotify')
+            return {}
+
+        return track_data
