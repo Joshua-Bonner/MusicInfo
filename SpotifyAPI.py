@@ -92,7 +92,7 @@ class SpotifyAPI(object):
         # drill into dictionary object returned by search and grab necessary info
         for artists in data['artists']['items']:
             name = str(artists['name']).lower()
-            if name == artist_name:
+            if name == artist_name.lower():
                 artist_info = {
                     'Artist': artists['name'],
                     'Followers': artists['followers']['total'],
@@ -108,7 +108,43 @@ class SpotifyAPI(object):
         return artist_data
 
     def get_album_info(self, album_name: str):
-        pass
+        """Using the SpotifyAPI search function retrieve album information
+           based on the track name
+
+        :param album_name: The name of the album to query
+        :return: A dictionary of dictionaries that contain information regarding each
+                 individual album with the same name:
+                     Key = unique Spotify id
+                     Values = album, artist, release date
+        """
+
+        # validity check on track_name
+        if album_name is None or album_name == '':
+            raise Exception(f'Must provide valid track name')
+
+        # return dictionary
+        album_data = {}
+
+        # call to SpotifyAPI search
+        data = self.search(album_name, APIQueryType.ALBUM)
+
+        # drill into dictionary object returned by search and grab necessary info
+        for albums in data['albums']['items']:
+            name = str(albums['name']).lower()
+            if name == album_name.lower():
+                album_info = {
+                    'Album': albums['name'],
+                    'Artist': albums['artists'][0]['name'],
+                    'Release Date': albums['release_date']
+                }
+                album_data[albums['id']] = album_info
+
+        # in the event that no data is found return status indicating as such
+        if len(album_data) == 0:
+            print(f'Track data cannot be found on Spotify')
+            return {}
+
+        return album_data
 
     def get_track_info(self, track_name: str) -> dict:
         """Using the SpotifyAPI search function retrieve track information
@@ -134,7 +170,7 @@ class SpotifyAPI(object):
         # drill into dictionary object returned by search and grab necessary info
         for tracks in data['tracks']['items']:
             name = str(tracks['name']).lower()
-            if name == track_name:
+            if name == track_name.lower():
                 track_info = {
                     'Track': tracks['name'],
                     'Artist': tracks['artists'][0]['name'],
