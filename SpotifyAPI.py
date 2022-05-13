@@ -1,6 +1,4 @@
 import base64
-import json
-
 import requests
 from urllib.parse import urlencode
 
