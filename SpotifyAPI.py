@@ -36,7 +36,6 @@ class SpotifyAPI(object):
         # if the request is invalid handle failure
         if request.status_code not in range(200, 299):
             raise Exception(f'Failed to authenticate client with error code: {request.status_code}')
-            return False
 
         # store access token into object variable
         token_response_data = request.json()
@@ -55,7 +54,6 @@ class SpotifyAPI(object):
         # type check query type
         if not isinstance(query_type, APIQueryType):
             raise Exception('Invalid query type!')
-            return {}
 
         # set up request
         headers = {'Authorization': f'Bearer {self.authorization_token}'}
@@ -67,12 +65,47 @@ class SpotifyAPI(object):
         request = requests.get(search_url, headers=headers)
         if request.status_code not in range(200, 299):
             raise Exception(f'Request failed with error code: {request.status_code}')
-            return {}
 
         return request.json()
 
-    def get_artist_info(self, artist_name: str):
-        pass
+    def get_artist_info(self, artist_name: str) -> dict:
+        """Using the SpotifyAPI search function retrieve artist information
+           based on the artists name
+
+        :param artist_name: The name of the artist to query
+        :return: A dictionary of dictionaries that contain information regarding each
+                 individual track with the same name:
+                    Key = unique Spotify id
+                    Values = artist, followers, genre
+        """
+
+        # validity check on artist_name
+        if artist_name is None or artist_name == '':
+            raise Exception(f'Must provide valid artist name')
+
+        # return dictionary
+        artist_data = {}
+
+        # call to SpotifyAPI search
+        data = self.search(artist_name, APIQueryType.ARTIST)
+
+        # drill into dictionary object returned by search and grab necessary info
+        for artists in data['artists']['items']:
+            name = str(artists['name']).lower()
+            if name == artist_name:
+                artist_info = {
+                    'Artist': artists['name'],
+                    'Followers': artists['followers']['total'],
+                    'Genre': artists['genres']
+                }
+                artist_data[artists['id']] = artist_info
+
+        # in the event that no data is found return status indicating as such
+        if len(artist_data) == 0:
+            print(f'Artist data cannot be found on Spotify')
+            return {}
+
+        return artist_data
 
     def get_album_info(self, album_name: str):
         pass
@@ -81,7 +114,7 @@ class SpotifyAPI(object):
         """Using the SpotifyAPI search function retrieve track information
            based on the track name
 
-        :param track_name: The name of the track to query the Spotify API for
+        :param track_name: The name of the track to query
         :return: A dictionary of dictionaries that contain information regarding each
                  individual track with the same name:
                      Key = unique Spotify id
@@ -91,7 +124,6 @@ class SpotifyAPI(object):
         # validity check on track_name
         if track_name is None or track_name == '':
             raise Exception(f'Must provide valid track name')
-            return {}
 
         # return dictionary
         track_data = {}
@@ -99,14 +131,14 @@ class SpotifyAPI(object):
         # call to SpotifyAPI search
         data = self.search(track_name, APIQueryType.TRACK)
 
-        # drill into json object returned by search and grab necessary info
+        # drill into dictionary object returned by search and grab necessary info
         for tracks in data['tracks']['items']:
             name = str(tracks['name']).lower()
             if name == track_name:
                 track_info = {
-                    'track': tracks['name'],
-                    'artist': tracks['artists'][0]['name'],
-                    'album': tracks['album']['name']
+                    'Track': tracks['name'],
+                    'Artist': tracks['artists'][0]['name'],
+                    'Album': tracks['album']['name']
                 }
                 track_data[tracks['id']] = track_info
 

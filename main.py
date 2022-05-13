@@ -11,7 +11,7 @@ CLIENT_SECRET = os.getenv('CLIENT_SECRET')
 
 def main():
     client = SpotifyAPI.SpotifyAPI(CLIENT_ID, CLIENT_SECRET)
-    data = client.get_track_info('in the end')
+    data = client.get_artist_info('through the eyes of the dead')
     print(json.dumps(data, indent=2))
 
 
