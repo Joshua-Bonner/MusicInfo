@@ -2,10 +2,14 @@ import base64
 import requests
 from urllib.parse import urlencode
 
-from common import APIQueryType
+from Common.common import APIQueryType
 
 
 class SpotifyAPI(object):
+    """Retrieves music information from the SpotifyAPI
+
+    """
+
     client_id = None
     client_secret = None
     authorization_token = None
