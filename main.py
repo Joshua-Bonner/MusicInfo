@@ -5,8 +5,6 @@ from GUI.MainGUIWindow import Ui_MainWindow
 
 
 def main():
-    # data = client.get_artist_info('i declare war')
-    # print(json.dumps(data, indent=2))
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
     ui = Ui_MainWindow()

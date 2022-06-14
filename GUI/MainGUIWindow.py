@@ -13,8 +13,14 @@ import os
 from dotenv import load_dotenv
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import QEvent, Qt
 from API import SpotifyAPI
 
+class TextEdit(QtWidgets.QTextEdit):
+    def keyPressEvent(self, event):
+        if event.key() in (Qt.Key_Return, Qt.Key_Enter):
+            return
+        super().keyPressEvent(event)
 
 class Ui_MainWindow(object):
     def __init__(self):
@@ -23,6 +29,8 @@ class Ui_MainWindow(object):
         CLIENT_SECRET = os.getenv('CLIENT_SECRET')
         self.client = SpotifyAPI.SpotifyAPI(CLIENT_ID, CLIENT_SECRET)
         self.musicData = {}
+        self.dataKeys = []
+        self.curIndex = 0
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -42,7 +50,7 @@ class Ui_MainWindow(object):
         font.setWeight(75)
         self.searchPrompt.setFont(font)
         self.searchPrompt.setObjectName("searchPrompt")
-        self.searchField = QtWidgets.QTextEdit(self.centralwidget)
+        self.searchField = TextEdit(self.centralwidget)
         self.searchField.setEnabled(True)
         self.searchField.setGeometry(QtCore.QRect(100, 10, 441, 31))
         font = QtGui.QFont()
@@ -58,7 +66,6 @@ class Ui_MainWindow(object):
         self.searchField.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustIgnored)
         self.searchField.setDocumentTitle("")
         self.searchField.setLineWrapMode(QtWidgets.QTextEdit.NoWrap)
-        self.searchField.setObjectName("searchField")
         self.by = QtWidgets.QLabel(self.centralwidget)
         self.by.setGeometry(QtCore.QRect(550, 10, 41, 21))
         font = QtGui.QFont()
@@ -102,11 +109,11 @@ class Ui_MainWindow(object):
         self.searchBox.addItem("")
         self.searchBox.addItem("")
         self.searchBox.addItem("")
-        self.nextBtn = QtWidgets.QPushButton(self.centralwidget)
+        self.nextBtn = QtWidgets.QPushButton(self.centralwidget, clicked=lambda: self.showNextEntry())
         self.nextBtn.setEnabled(False)
         self.nextBtn.setGeometry(QtCore.QRect(580, 100, 81, 31))
         self.nextBtn.setObjectName("nextBtn")
-        self.PrevBtn = QtWidgets.QPushButton(self.centralwidget)
+        self.PrevBtn = QtWidgets.QPushButton(self.centralwidget, clicked=lambda: self.showPrevEntry())
         self.PrevBtn.setEnabled(False)
         self.PrevBtn.setGeometry(QtCore.QRect(490, 100, 81, 31))
         self.PrevBtn.setDefault(False)
@@ -114,7 +121,7 @@ class Ui_MainWindow(object):
         self.infoTextBrowser = QtWidgets.QTextBrowser(self.centralwidget)
         self.infoTextBrowser.setGeometry(QtCore.QRect(10, 140, 671, 251))
         font = QtGui.QFont()
-        font.setPointSize(11)
+        font.setPointSize(14)
         self.infoTextBrowser.setFont(font)
         self.infoTextBrowser.setObjectName("infoTextBrowser")
         MainWindow.setCentralWidget(self.centralwidget)
@@ -140,7 +147,16 @@ class Ui_MainWindow(object):
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
+    def resetState(self):
+        self.musicData = {}
+        self.dataKeys = []
+        self.curIndex = 0
+        self.nextBtn.setEnabled(False)
+        self.PrevBtn.setEnabled(False)
+        self.infoTextBrowser.setPlainText('')
+
     def search(self):
+        self.resetState()
         searchString = self.searchField.toPlainText()
         queryType = self.searchBox.currentText()
         try:
@@ -155,10 +171,43 @@ class Ui_MainWindow(object):
         except:
             print("No search string provided!")
 
+        self.dataKeys = self.musicData.keys()
+
         try:
-            self.infoTextBrowser.setPlainText(json.dumps(next(iter(self.musicData.items()))[1], indent=2))
+            if len(self.dataKeys) >= 1:
+                self.infoTextBrowser.setPlainText(
+                    json.dumps(self.musicData.__getitem__(list(self.dataKeys)[self.curIndex]), indent=2))
+                if len(self.dataKeys) > 1:
+                    self.nextBtn.setEnabled(True)
         except:
-            print("Error")
+            print("Error in UI search")
+
+    def showNextEntry(self):
+        try:
+            self.PrevBtn.setEnabled(True)
+            self.curIndex += 1
+            self.infoTextBrowser.setPlainText(
+                json.dumps(self.musicData.__getitem__(list(self.dataKeys)[self.curIndex]), indent=2))
+            if (list(self.dataKeys)[self.curIndex]) is not (list(self.dataKeys)[-1]):
+                self.nextBtn.setEnabled(True)
+            else:
+                self.nextBtn.setEnabled(False)
+        except:
+            print("Next item does not exist")
+
+    def showPrevEntry(self):
+        try:
+            if self.curIndex != 0:
+                self.curIndex -= 1
+                self.infoTextBrowser.setPlainText(
+                    json.dumps(self.musicData.__getitem__(list(self.dataKeys)[self.curIndex]), indent=2))
+                if self.curIndex == 0:
+                    self.PrevBtn.setEnabled(False)
+                    self.nextBtn.setEnabled(True)
+                else:
+                    self.PrevBtn.setEnabled(True)
+        except:
+            print("Previous item does not exist")
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
