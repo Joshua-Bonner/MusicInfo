@@ -5,6 +5,10 @@ from GUI.MainGUIWindow import Ui_MainWindow
 
 
 def main():
+    """Main driver
+
+    :return:
+    """
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
     ui = Ui_MainWindow()

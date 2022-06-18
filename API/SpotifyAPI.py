@@ -10,6 +10,7 @@ class SpotifyAPI(object):
 
     """
 
+    # class variables
     client_id = None
     client_secret = None
     authorization_token = None
@@ -143,7 +144,7 @@ class SpotifyAPI(object):
 
         # in the event that no data is found return status indicating as such
         if len(album_data) == 0:
-            print(f'Track data cannot be found on Spotify')
+            print(f'Album data cannot be found on Spotify')
             return {}
 
         return album_data
